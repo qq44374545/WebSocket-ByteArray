@@ -15,7 +15,7 @@
         "src/Network/base/ByteArray.js",
         "src/Network/SocketTest.js",
         "src/Network/IOSocket.js",
-        "src/Network/ServerSocket.js",
+        "src/Network/GameSocket.js",
         "src/Protocal/GameProtocals.js",
         "src/Protocal/GameDataModel.js",
         "src/Utils/GameLog.js",

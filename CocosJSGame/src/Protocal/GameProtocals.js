@@ -3,6 +3,7 @@
  */
 
 var GameProtocals = (function(){
+
     var processWaitingCMDS = function (cmd,waitData){
         if(typeof cmd !== "number") return;
         switch(cmd){
@@ -11,10 +12,17 @@ var GameProtocals = (function(){
                 break;
         }
     }
+
     return{
-        dispatchData:function(protId,bytes,commandId,waitData){
+        dispatchData:function(socketType,protId,bytes,commandId,waitData){
             try{
-                var ProtClass = eval("Prot"+protId.toString());
+                var ProtClass;
+                if (socketType === SOCKET_TYPE_SELECT_SERVER){
+                    ProtClass = eval("SerProt"+protId.toString());
+                }
+                else{
+                    ProtClass = eval("Prot"+protId.toString());
+                }
                 if(ProtClass !== undefined){
                     var prot = new ProtClass();
                     prot.doProtocal(bytes);
@@ -36,6 +44,35 @@ var GameProtocals = (function(){
     }
 })();
 
+function Prot1(){
+    var protId = 1;
+    this.getProtData = function(data){
+        var bytes = new ByteArray();
+        return bytes;
+    };
+    /**
+     * 解析1协议
+     */
+    this.doProtocal = function(data){
+        //协议1
+        var bytes = new ByteArray(data);
+        var prot1 = new Object();
+        prot1.stateCode = bytes.readByte();
+        if(prot1.stateCode === 1){
+            prot1.serverTime = bytes.readLong();//图片服务器地址
+            prot1.serverTimeOffset = bytes.readLong();//图片服务器地址
+        }
+
+        GameDataModel.getInstance().setProtData(protId,prot1);
+        var protTemp = GameDataModel.getInstance().getProtData(protId);
+        GameLog.log("服务器时间："+protTemp.serverTime);
+    };
+
+    this.responseHandler = function(bytes){
+        GameLog.log("=========================>responseHandler 1")
+    };
+}
+
 function Prot6(){
     var protId = 1001;
     this.getProtData = function(data){
@@ -44,8 +81,8 @@ function Prot6(){
     };
 
     /**
-    * 解析6协议
-    */
+     * 解析6协议
+     */
     this.doProtocal = function(data){
         //协议6
         var bytes = new ByteArray(data);

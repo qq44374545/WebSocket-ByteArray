@@ -17,7 +17,7 @@ var HelloWorldLayer = cc.Layer.extend({
         this.addChild(mainscene.node);
 
         //测试Socket连接
-        initSocket();
+        initSocketWork();
 
 
 

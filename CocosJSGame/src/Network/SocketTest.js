@@ -2,31 +2,46 @@
  * Created by sbxfc on 15/9/23.
  */
 
-function initSocket(){
+function initSocketWork(){
 
-    ServerSocket.getInstance().initNetwork();
+    /**
+     * 测试Socket连接
+     */
+    GameSocket.getInstance().initNetwork();
 
-    //确保与服务器连接成功后发送信息
     var listener = cc.EventListener.create({
         event: cc.EventListener.CUSTOM,
-        eventName: CUSTOM_EVENT_SELECT_SERVER_SOCKET_ON_OPEN,
+        eventName: CUSTOM_EVENT_GAME_SOCKET_ON_OPEN,
         callback: function(event){
-            //socket连接成功!
-            GameLog.log("选服服务器连接成功!");
-
-
-
             setInterval(function () {
-                var prot6 = new Prot6();
-                var bytes = prot6.getProtData();
-                ServerSocket.getInstance().sendProt(6,bytes.buffer(),6,"hi!");
+                /*var prot6 = new Prot6();
+                 var bytes = prot6.getProtData();
+                 GameSocket.getInstance().sendProt(6,bytes.buffer(),6,"hi 1001 1002!");*/
 
-                /*var prots = new Array();
-                prots.push([1001,bytes]);
-                prots.push([1002,bytes2]);
-                ServerSocket.getInstance().send(prots,10001,"hi 1001 1002!");*/
-            }, 3000);
+                var random = Math.random()*10;
+                if(random < 4){
+                    var prot6 = new Prot6();
+                    var bytes = prot6.getProtData();
+                    GameSocket.getInstance().sendProt(6,bytes.buffer(),6,"hi6!");
+                }
+                else if (random < 8){
+                    var prot1 = new Prot1();
+                    var bytes = prot1.getProtData();
+                    GameSocket.getInstance().sendProt(1,bytes.buffer(),1,"hi1!");
+                }
+                else{
+                    var prot6 = new Prot6();
+                    var bytes = prot6.getProtData();
 
+                    var prot1 = new Prot1();
+                    var bytes2 = prot1.getProtData();
+
+                    var prots = new Array();
+                    prots.push([6,bytes]);
+                    prots.push([1,bytes2]);
+                    GameSocket.getInstance().send(prots,10001,"hi 1001 1002!");
+                }
+            },3000);
         }
     });
     cc.eventManager.addListener(listener, 1);
