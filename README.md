@@ -1,2 +1,1 @@
-# CocosJSWebSocket
-CocosJS里实现WebSocket通信的客户端
+
