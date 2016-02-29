@@ -3,25 +3,21 @@
  */
 
 var GameLoginEvent = ProtCallBack.extend({
-
-    /**
-     * 登陆游戏
-     */
     _userId:null,
     _userName:null,
     login:function(userId,userName){
-        this._userId = userId;
-        this._userName = userName;
-        this._logingame();
+        this._userId = userId === undefined ? 241:userId;
+        this._userName = userName === undefined ? "1505271000000358872":userId;
+        this._loginGame();
     },
 
     /**
      * 登陆游戏服务器
      */
-    _logingame:function(){
-        var prot1001 = GameProtocalUtil.getInstance().getProt(1001);
-        prot1001.setArgs(this._userId,this._userName,"wst_0201006","zh","d01503944c714920a8096d4581ad6081","","","","");
-        GameProtocalUtil.getInstance().sendProt(prot1001,this);
+    _loginGame:function(){
+        var prot4001 = GameProtocalUtil.getInstance().getProt(4001);
+        prot4001.setArgs(this._userId,this._userName);
+        GameProtocalUtil.getInstance().sendProt(prot4001,this);
     },
 
     /**
@@ -30,13 +26,11 @@ var GameLoginEvent = ProtCallBack.extend({
     onCmmandFinished:function(pProt)
     {
         switch (pProt.protId){
-            case 1001:
+            case 4001:
             {
                 switch (pProt.stateCode) {
                     case PROT_STATE_CODE_SUCC:
-                    {
                         console.log("游戏登陆成功!");
-                    }
                         break;
                     case 2://创建角色
                         console.log("创建角色!");
@@ -45,9 +39,7 @@ var GameLoginEvent = ProtCallBack.extend({
                         console.log("排队!");
                         break;
                     default :
-                    {
-                        console.log("游戏登陆失败!:"+pProt.stateCode.toString());
-                    }
+                        console.log("登陆失败:"+pProt.stateCode.toString());
                         break;
                 }
             }

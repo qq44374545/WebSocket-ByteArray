@@ -16,30 +16,36 @@
 
 
 /**
- *  @param bytes 接收一个arraybuffer类型的字节数据
+ *  @param bytes ArrayBuffer类型的字节数据
  */
 var ByteArray = function (bytes) {
 
     bytes = bytes === undefined ? new ArrayBuffer(0) : bytes;
+    if (!(bytes instanceof ArrayBuffer)) {
+        throw Error("ByteArray参数应当是一个ArrayBuffer类型的数据!");
+    }
 
-    var _bytes = bytes;
-    var TRANSFER_LENGTH_MIN = 16;//容器每次扩充最小字节长度
     var BIG_ENDIAN = false;
-    var LITTLE_ENDIAN = true;
     var HIGHT_WORD_MULTIPLIER = 0x100000000;
 
+    var _bytes = bytes;
     var _dv = new DataView(_bytes);
-    var _position = 0;//当前执行读写数据的位置
+    var _position = 0;
     var _bytesLength = _bytes.byteLength;
     var self = this;
 
     /**
-     *  @param length 增加容器长度,单位 byte
+     *  @param length 扩充的容器长度,单位 byte
      *  扩充容器
      */
-    self.transfer = function (length) {
+    self.plusCapacity = function (length) {
 
-        length = length < TRANSFER_LENGTH_MIN ? TRANSFER_LENGTH_MIN : length;
+        var plusLength = _bytesLength;
+        while (plusLength < length) {
+            plusLength *= 2;
+            var PLUS_VALUE_MIN = 16;
+            plusLength = plusLength <= PLUS_VALUE_MIN ? PLUS_VALUE_MIN : plusLength;
+        }
 
         //扩充容器
         var bytesNew = new ArrayBuffer(_bytes.byteLength + length);
@@ -67,7 +73,7 @@ var ByteArray = function (bytes) {
         _position++;
         _bytesLength++;
         if (_position >= _bytes.byteLength) {
-            self.transfer(1);
+            self.plusCapacity(1);
         }
         _dv.setInt8(_position - 1, value);
     }
@@ -91,7 +97,7 @@ var ByteArray = function (bytes) {
 
         if (length > 0) {
             if ((_position + length) >= _bytes.byteLength) {
-                self.transfer(length);
+                self.plusCapacity(length);
             }
 
             var dataDV = new Uint8Array(data);
@@ -111,7 +117,7 @@ var ByteArray = function (bytes) {
         _position += 4;
         _bytesLength += 4;
         if (_position >= _bytes.byteLength) {
-            self.transfer(4);
+            self.plusCapacity(4);
         }
         _dv.setInt32(_position - 4, value, BIG_ENDIAN);
     }
@@ -123,7 +129,7 @@ var ByteArray = function (bytes) {
         _position += 8;
         _bytesLength += 8;
         if (_position >= _bytes.byteLength) {
-            self.transfer(8);
+            self.plusCapacity(8);
         }
 
         var hi = Math.floor(value / HIGHT_WORD_MULTIPLIER);
@@ -139,7 +145,7 @@ var ByteArray = function (bytes) {
         _position += 8;
         _bytesLength += 8;
         if (_position >= _bytes.byteLength) {
-            self.transfer(8);
+            self.plusCapacity(8);
         }
 
         _dv.setFloat64(_position - 8, value, BIG_ENDIAN);
@@ -155,13 +161,12 @@ var ByteArray = function (bytes) {
         self.writeBytes(bytesValue);
     }
 
-    //----------------------------------
-    //  read
-    //----------------------------------
+//----------------------------------
+//  read
+//----------------------------------
 
     /**
-     *  读取一个有符号的字节
-     *  网络字节流使用大端序 BIG_ENDIAN
+     *  读取一个字节(有符号的字节)
      */
     self.readByte = function () {
         _position++;
@@ -170,7 +175,6 @@ var ByteArray = function (bytes) {
 
     /**
      *  读取一个32位整数
-     *  网络字节流使用大端序 BIG_ENDIAN
      */
     self.readInt = function () {
         _position += 4;
@@ -179,7 +183,6 @@ var ByteArray = function (bytes) {
 
     /**
      *  读取一个64位浮点数
-     *  网络字节流使用大端序 BIG_ENDIAN
      */
     self.readDouble = function () {
         _position += 8;
@@ -188,9 +191,9 @@ var ByteArray = function (bytes) {
 
     /**
      *  读取一个64位整数
-     *  网络字节流使用大端序 BIG_ENDIAN
      */
     self.readLong = function () {
+
         _position += 8;
 
         var lo, hi;
@@ -200,14 +203,18 @@ var ByteArray = function (bytes) {
     }
 
     /**
-     *  @param byteLength 读取指定长度为byteLength的字节
+     *  读取指定长度的字节数据
+     *  @param byteLength 读取长度为byteLength的字节数据
      */
     self.readBytes = function (byteLength) {
         byteLength = ('number' === typeof byteLength ?
                 byteLength : 0
         );
 
-        //读取字符串的所有字节
+        if((_bytesLength + _position) - byteLength < 0){
+            throw Error(' Error : Unable to read the data of length . [readBytes byteLength='+byteLength+"]");
+        }
+
         _position += byteLength;
         return new Uint8Array(_bytes, _position - byteLength, byteLength);
     }
@@ -216,33 +223,39 @@ var ByteArray = function (bytes) {
      *  读取一个UTF-8格式的字符串
      */
     self.readUTF = function () {
-        //读取字符串长度
-        var length = self.readInt();
-
-        var stringBytes = self.readBytes(length)
-        var str = UTF8.getStringFromBytes(stringBytes);
-        return str;
+        var readLength = self.readInt();
+        var bytes = self.readBytes(readLength)
+        return UTF8.getStringFromBytes(bytes);
     }
 
-    //获取ByteArray里的字节
+    /**
+     * 获取ByteArray里的字节数据
+     */
     self.buffer = function () {
         return self.slice(0, _bytesLength);
     }
 
-    //返回字节长度
-    self.slice = function (start, end) {
+    /**
+     * 以Copy的形式从 begin 到 end 之间的字节数据
+     * @param begin
+     * @param end
+     * @return ArrayBuffer
+     */
+    self.slice = function (begin, end) {
         end = end === undefined ? _bytesLength : end;
-        return _bytes.slice(start, end);
+        return _bytes.slice(begin, end);
     }
 
-    //返回字节长度
+    /**
+     * 返回字节长度
+     */
     self.bytesLength = function () {
         return _bytesLength;
     }
 };
 
-//检测设备大小端
-var littleEndian = (function () {
+//检测大小端设备
+var isLittleEndianDevice = (function () {
     var buffer = new ArrayBuffer(2);
     new DataView(buffer).setInt16(0, 256, true);
     return new Int16Array(buffer)[0] === 256;

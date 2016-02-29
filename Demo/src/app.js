@@ -22,9 +22,9 @@ var HelloWorldLayer = cc.Layer.extend({
             event: cc.EventListener.CUSTOM,
             eventName: CUSTOM_EVENT_GAME_SOCKET_ON_OPEN,
             callback: function (event) {
-                console.log("连接服务器成功!");
-                var loginEvt = new GameLoginEvent();
-                loginEvt.login(241, "1505271000000358872");
+                console.log("服务器连接成功!");
+                var evt = new GameLoginEvent();
+                evt.login();
             }
         });
         cc.eventManager.addListener(listener, 1);
