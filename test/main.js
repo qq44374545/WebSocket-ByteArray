@@ -5,7 +5,7 @@ socket.initNetwork("ws://echo.websocket.org/");
 window.addEventListener(SOCKET_EVENT_CONNECTED, function() {
     console.log('连接成功!');
     var bytes = new ByteArray();
-    bytes.writeUTF("闻说双溪春尚好，也拟泛轻舟");
+    bytes.writeUTF("闻说双溪春尚好");
     bytes.writeByte(127);
     bytes.writeInt(666);
     bytes.writeLong(201412270547);
