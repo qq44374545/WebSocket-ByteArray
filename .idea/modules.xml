@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/CCJSWebSocket.iml" filepath="$PROJECT_DIR$/.idea/CCJSWebSocket.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/HTML5WebSocket.iml" filepath="$PROJECT_DIR$/.idea/HTML5WebSocket.iml" />
     </modules>
   </component>
 </project>
